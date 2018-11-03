@@ -1,4 +1,4 @@
-FROM afdaniele/libbot2-ros:desktop
+FROM afdaniele/libbot2-ros:latest
 
 # set the version of the realsense library
 ENV LIBREALSENSE_VERSION 2.10.2
