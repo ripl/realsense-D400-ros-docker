@@ -2,7 +2,7 @@
 
 Docker image containing the ROS bindings for the
 [Intel® RealSense™ Depth Camera D400-Series](https://software.intel.com/en-us/realsense/d400)
-devices
+devices.
 
 ## How to run the camera drivers
 
