@@ -8,5 +8,4 @@ source /code/devel/setup.bash
   roslaunch \
     realsense2_camera \
     rs_rgbd.launch \
-      enable_pointcloud:=true \
       "$@"
