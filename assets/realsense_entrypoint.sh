@@ -5,7 +5,4 @@ source /code/devel/setup.bash
 
 # run sensor node
 /entrypoint.sh \
-  roslaunch \
-    realsense2_camera \
-    rs_rgbd.launch \
-      "$@"
+  roslaunch realsense2_camera rs_rgbd.launch "$@"
