@@ -42,4 +42,4 @@ where `<deputy_name>` can be any string that identifies the camera
 The deputy will have access to ROS and all the necessary packages. This means
 that you can simply use the command `roslaunch realsense2_camera rs_rgbd.launch`
 in your procman configuration. Check out the file `samples/procman.cfg` for
-an example of procman configuration file that launches a realsense camera.
+an example of procman configuration file that activates a realsense camera.
