@@ -50,8 +50,3 @@ RUN mkdir -p /code/src && \
 # build ROS package
 RUN . /opt/ros/${ROS_DISTRO}/setup.sh && \
   catkin build
-
-# install new entrypoint
-COPY assets/realsense_entrypoint.sh /realsense_entrypoint.sh
-
-ENTRYPOINT ["/realsense_entrypoint.sh"]
