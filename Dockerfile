@@ -1,8 +1,8 @@
 FROM afdaniele/libbot2-ros:latest
 
 # set the version of the realsense library
-ENV LIBREALSENSE_VERSION 2.10.2
-ENV LIBREALSENSE_ROS_VERSION 2.0.3
+ENV LIBREALSENSE_VERSION 2.16.1
+ENV LIBREALSENSE_ROS_VERSION 2.1.0
 
 # set working directory
 RUN mkdir -p /code
@@ -55,4 +55,3 @@ RUN . /opt/ros/${ROS_DISTRO}/setup.sh && \
 COPY assets/realsense_entrypoint.sh /realsense_entrypoint.sh
 
 ENTRYPOINT ["/realsense_entrypoint.sh"]
-CMD ["bash"]
