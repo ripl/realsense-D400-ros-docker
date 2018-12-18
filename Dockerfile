@@ -34,7 +34,7 @@ RUN cd /tmp && \
   mkdir -p librealsense-${LIBREALSENSE_VERSION}/build && \
   cd librealsense-${LIBREALSENSE_VERSION}/build && \
   cmake .. && \
-  make -j && \
+  make && \
   make install && \
   rm -rf librealsense-${LIBREALSENSE_VERSION}
 
