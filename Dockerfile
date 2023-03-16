@@ -45,6 +45,13 @@ ENV \
     CPK_PROJECT_LAUNCHERS_PATH="${PROJECT_LAUNCHERS_PATH}" \
     CPK_LAUNCHER="${LAUNCHER}"
 
+
+# Required to install librealsense
+# per Step 2 of https://github.com/IntelRealSense/realsense-ros/tree/ros1-legacy
+# which points to https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md#installing-the-packages 
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE || sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE
+RUN add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u
+
 # install apt dependencies
 COPY ./dependencies-apt.txt "${PROJECT_PATH}/"
 RUN cpk-apt-install ${PROJECT_PATH}/dependencies-apt.txt
@@ -88,33 +95,25 @@ LABEL \
 # <==================================================
 
 
-# install librealsense
-# per Step 2 of https://github.com/IntelRealSense/realsense-ros/tree/ros1-legacy
-# which points to https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md#installing-the-packages 
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE || sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE
-RUN add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u
-RUN apt-get install librealsense2-dkms
-RUN apt-get install librealsense2-utils
-RUN apt-get install librealsense2-dev
-RUN apt-get install librealsense2-dbg
 
 
-RUN cd /tmp && \
-  wget https://github.com/IntelRealSense/librealsense/archive/v${LIBREALSENSE_VERSION}.tar.gz && \
-  tar -xvzf v${LIBREALSENSE_VERSION}.tar.gz && \
-  rm v${LIBREALSENSE_VERSION}.tar.gz && \
-  mkdir -p librealsense-${LIBREALSENSE_VERSION}/build && \
-  cd librealsense-${LIBREALSENSE_VERSION}/build && \
-  cmake .. && \
-  make && \
-  make install && \
-  rm -rf librealsense-${LIBREALSENSE_VERSION}
 
-# install ROS package
-RUN mkdir -p /code/src && \
-  cd /code/src/ && \
-  wget https://github.com/intel-ros/realsense/archive/${LIBREALSENSE_ROS_VERSION}.tar.gz && \
-  tar -xvzf ${LIBREALSENSE_ROS_VERSION}.tar.gz && \
-  rm ${LIBREALSENSE_ROS_VERSION}.tar.gz && \
-  mv realsense-${LIBREALSENSE_ROS_VERSION}/realsense2_camera ./ && \
-  rm -rf realsense-${LIBREALSENSE_ROS_VERSION}
+# RUN cd /tmp && \
+#   wget https://github.com/IntelRealSense/librealsense/archive/v${LIBREALSENSE_VERSION}.tar.gz && \
+#   tar -xvzf v${LIBREALSENSE_VERSION}.tar.gz && \
+#   rm v${LIBREALSENSE_VERSION}.tar.gz && \
+#   mkdir -p librealsense-${LIBREALSENSE_VERSION}/build && \
+#   cd librealsense-${LIBREALSENSE_VERSION}/build && \
+#   cmake .. && \
+#   make && \
+#   make install && \
+#   rm -rf librealsense-${LIBREALSENSE_VERSION}
+
+# # install ROS package
+# RUN mkdir -p /code/src && \
+#   cd /code/src/ && \
+#   wget https://github.com/intel-ros/realsense/archive/${LIBREALSENSE_ROS_VERSION}.tar.gz && \
+#   tar -xvzf ${LIBREALSENSE_ROS_VERSION}.tar.gz && \
+#   rm ${LIBREALSENSE_ROS_VERSION}.tar.gz && \
+#   mv realsense-${LIBREALSENSE_ROS_VERSION}/realsense2_camera ./ && \
+#   rm -rf realsense-${LIBREALSENSE_ROS_VERSION}
