@@ -1,32 +1,104 @@
-FROM ripl/libbot2-ros:latest
+# parameters
+ARG ARCH
+ARG NAME
+ARG ORGANIZATION
+ARG DESCRIPTION
+ARG MAINTAINER
 
-# set the version of the realsense library
-ENV LIBREALSENSE_VERSION 2.16.1
-ENV LIBREALSENSE_ROS_VERSION 2.1.0
+# ==================================================>
+# ==> Do not change the code below this line
+ARG BASE_REGISTRY=docker.io
+ARG BASE_ORGANIZATION=ripl
+ARG BASE_REPOSITORY=libbot2-ros
+ARG BASE_TAG=cpk
 
-# set working directory
-RUN mkdir -p /code
-WORKDIR /code
+# define base image
+FROM ${BASE_REGISTRY}/${BASE_ORGANIZATION}/${BASE_REPOSITORY}:${BASE_TAG}-${ARCH} as BASE
 
-# install dependencies
-RUN apt update && \
-  DEBIAN_FRONTEND=noninteractive apt install -y \
-  wget \
-  python-rosinstall \
-  python-catkin-tools \
-  ros-${ROS_DISTRO}-jsk-tools \
-  ros-${ROS_DISTRO}-rgbd-launch \
-  ros-${ROS_DISTRO}-image-transport-plugins \
-  ros-${ROS_DISTRO}-image-transport \
-  libusb-1.0-0 \
-  libusb-1.0-0-dev \
-  freeglut3-dev \
-  libgtk-3-dev \
-  libglfw3-dev && \
-  # clear cache
-  rm -rf /var/lib/apt/lists/*
+# recall all arguments
+# - current project
+ARG NAME
+ARG ORGANIZATION
+ARG DESCRIPTION
+ARG MAINTAINER
+# - base project
+ARG BASE_REGISTRY
+ARG BASE_ORGANIZATION
+ARG BASE_REPOSITORY
+ARG BASE_TAG
+# - defaults
+ARG LAUNCHER=default
+
+# define/create project paths
+ARG PROJECT_PATH="${CPK_SOURCE_DIR}/${NAME}"
+ARG PROJECT_LAUNCHERS_PATH="${CPK_LAUNCHERS_DIR}/${NAME}"
+RUN mkdir -p "${PROJECT_PATH}"
+RUN mkdir -p "${PROJECT_LAUNCHERS_PATH}"
+WORKDIR "${PROJECT_PATH}"
+
+# keep some arguments as environment variables
+ENV \
+    CPK_PROJECT_NAME="${NAME}" \
+    CPK_PROJECT_DESCRIPTION="${DESCRIPTION}" \
+    CPK_PROJECT_MAINTAINER="${MAINTAINER}" \
+    CPK_PROJECT_PATH="${PROJECT_PATH}" \
+    CPK_PROJECT_LAUNCHERS_PATH="${PROJECT_LAUNCHERS_PATH}" \
+    CPK_LAUNCHER="${LAUNCHER}"
+
+# install apt dependencies
+COPY ./dependencies-apt.txt "${PROJECT_PATH}/"
+RUN cpk-apt-install ${PROJECT_PATH}/dependencies-apt.txt
+
+# install python3 dependencies
+COPY ./dependencies-py3.txt "${PROJECT_PATH}/"
+RUN cpk-pip3-install ${PROJECT_PATH}/dependencies-py3.txt
+
+# install launcher scripts
+COPY ./launchers/. "${PROJECT_LAUNCHERS_PATH}/"
+COPY ./launchers/default.sh "${PROJECT_LAUNCHERS_PATH}/"
+RUN cpk-install-launchers "${PROJECT_LAUNCHERS_PATH}"
+
+# copy project root
+COPY ./*.cpk ./*.sh ${PROJECT_PATH}/
+
+# copy the source code
+COPY ./packages "${CPK_PROJECT_PATH}/packages"
+
+# build catkin workspace
+RUN catkin build \
+    --workspace ${CPK_CODE_DIR}
+
+# install packages dependencies
+RUN cpk-install-packages-dependencies
+
+# define default command
+CMD ["bash", "-c", "launcher-${CPK_LAUNCHER}"]
+
+# store module metadata
+LABEL \
+    cpk.label.current="${ORGANIZATION}.${NAME}" \
+    cpk.label.project.${ORGANIZATION}.${NAME}.description="${DESCRIPTION}" \
+    cpk.label.project.${ORGANIZATION}.${NAME}.code.location="${PROJECT_PATH}" \
+    cpk.label.project.${ORGANIZATION}.${NAME}.base.registry="${BASE_REGISTRY}" \
+    cpk.label.project.${ORGANIZATION}.${NAME}.base.organization="${BASE_ORGANIZATION}" \
+    cpk.label.project.${ORGANIZATION}.${NAME}.base.project="${BASE_REPOSITORY}" \
+    cpk.label.project.${ORGANIZATION}.${NAME}.base.tag="${BASE_TAG}" \
+    cpk.label.project.${ORGANIZATION}.${NAME}.maintainer="${MAINTAINER}"
+# <== Do not change the code above this line
+# <==================================================
+
 
 # install librealsense
+# per Step 2 of https://github.com/IntelRealSense/realsense-ros/tree/ros1-legacy
+# which points to https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md#installing-the-packages 
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE || sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE
+RUN add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u
+RUN apt-get install librealsense2-dkms
+RUN apt-get install librealsense2-utils
+RUN apt-get install librealsense2-dev
+RUN apt-get install librealsense2-dbg
+
+
 RUN cd /tmp && \
   wget https://github.com/IntelRealSense/librealsense/archive/v${LIBREALSENSE_VERSION}.tar.gz && \
   tar -xvzf v${LIBREALSENSE_VERSION}.tar.gz && \
@@ -46,7 +118,3 @@ RUN mkdir -p /code/src && \
   rm ${LIBREALSENSE_ROS_VERSION}.tar.gz && \
   mv realsense-${LIBREALSENSE_ROS_VERSION}/realsense2_camera ./ && \
   rm -rf realsense-${LIBREALSENSE_ROS_VERSION}
-
-# build ROS package
-RUN . /opt/ros/${ROS_DISTRO}/setup.sh && \
-  catkin build
